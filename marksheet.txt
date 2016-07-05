@@ -1,0 +1,197 @@
+-------------------------------------------------------------------------------
+
+1. Instructions
+
+- replace any [...] with free text,
+  and
+- replace the [?] with an X if you have completed that stage,
+- replace the [?] with an * if you have attempted that stage, but you know
+  it doesn't work completely; document why you think it doesn't work, plus
+  what you would do to fix the problem, at the end of the marksheet.
+
+-------------------------------------------------------------------------------
+
+2. Information
+
+So that we can calibrate and improve the assignment in the future, give us
+a rough idea how long (in hours) you spent on it *in total*:
+
+effort : [...] hours
+
+-------------------------------------------------------------------------------
+
+3. Citation
+
+Clearly it might have an influence on your mark, but the use of third-party
+resources *is* allowed *if* correctly cited (unless explicitly prohibited 
+by the assignment description of course).  Let us know what third-party 
+source code or resources you used (if any) so it's clear what's your work 
+and what isn't:
+
+[Stage 1: James Manger - A Chosen Ciphertext Attack on RSA Optimal Asymmetric 
+          Encryption Padding (OAEP) as Standardized in PKCS #1 v2.0
+          http://archiv.infsec.ethz.ch/education/fs08/secsem/Manger01.pdf
+          
+          The RFC documentation
+          http://tools.ietf.org/html/rfc3447
+          
+          The GMP Library manual
+          https://gmplib.org/manual/
+          
+          The OpenSSL documentation
+          https://www.openssl.org/docs/
+          
+ Stage 2: J. Dhem et al - A Practical Implementation of the Timing Attack
+          http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.12.3070 
+		  
+ Stage 3: Michael Tunstall et al - Differential Fault Analysis of the 
+          Advanced Encryption Standard using a Single Fault
+          https://eprint.iacr.org/2009/575.pdf
+          
+          The Round Constant lookup table:
+          https://en.wikipedia.org/wiki/Rijndael_key_schedule
+          
+          Galois Multiplication lookup tables:
+          https://en.wikipedia.org/wiki/Rijndael_mix_columns
+          
+ Stage 4: Power Analysis Attacks - Revealing the Secrets of Smartcards
+          http://www.dpabook.org
+          
+ All stages: 
+          NIST FIPS 197
+          http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
+          
+          The GMP Library manual
+          https://gmplib.org/manual/
+          
+          The OpenSSL documentation
+          https://www.openssl.org/docs/
+          
+          The SubBytes and Inverse SubBytes (Stage 3 only) lookup tables:
+          https://en.wikipedia.org/wiki/Rijndael_S-box
+          
+          Additionally, all stages used the C++ implementation of process
+          communication provided in Worksheet 2, and the key verification 
+          with OpenSSL provided in Worksheet 3.
+]
+
+-------------------------------------------------------------------------------
+
+4. Marking
+
+The following gives a stage-by-stage description of the assignment marking
+scheme.  Note this acts as an indicative guideline only, including weights
+for each more obvious element (e.g., the functional correctness of a stage).
+For example, other elements outside this list *often* warrant an increase
+or decrease in marks; examples include hard to quantify features such as
+the style or efficiency of a solution.
+
+[X] Stage 1 : an attack based on error messages
+
+              - correct target material                              ( 40%)
+              - solution quality wrt. efficiency, robustness etc.    ( 30%)
+              - analysis questions                                   ( 30%)
+
+              target material : [E2651D5A2D6203BB54937D38363FBADA621AB45A4803B3D9A358B332044DEFD7019F586CE2C798B04E8133E467520A69]
+
+[X] Stage 2 : an attack based on execution time
+
+              - correct target material                              ( 40%)
+              - solution quality wrt. efficiency, robustness etc.    ( 30%)
+              - analysis questions                                   ( 30%)
+
+              target material : [5DEED5FFAA328211]
+
+[?] Stage 3 : an attack based on an injected fault
+
+              - correct target material                              ( 40%)
+              - solution quality wrt. efficiency, robustness etc.    ( 30%)
+              - analysis questions                                   ( 30%)
+
+              target material : [D62C43AD6605FAA8CF0610ACC133D462]
+
+[?] Stage 4 : an attack based on power consumption
+
+              - correct target material                              ( 40%)
+              - solution quality wrt. efficiency, robustness etc.    ( 30%)
+              - analysis questions                                   ( 30%)
+
+              target material : [D9AA689545599966C91B1A1C83842613]
+                                                                     ------
+                                                                     (400%)
+
+-------------------------------------------------------------------------------
+
+5. Documentation
+
+Any other documentation, notes or comments that you think are important or
+might be easy to overlook (e.g., a subtle issue or technique in associated
+source code) should go here:
+
+[   All implementations are written in C++, and Makefiles are included. Hence,
+ a command like 
+        make && ./attack 61061.D 61061.conf
+ compiles and runs the code.
+ 
+    The OAEP attack follows Manger's paper, cited above. Once the OAEP message 
+ is recovered, it is unmasked: the comments 3.a-g. in the code refer to the 
+ steps described in the RFC documentation, also cited above. As stated in the 
+ paper, the attack does not work in the case of 2*B >= N, hence the program 
+ outputs an error message and returns. A potential improvement is handling the
+ error so that the attack is still able to recover the message.
+ 
+    The Timing attack follows Dhem's paper. Instead of using the mpz_t, C++ 
+ allowed using mpz_class, which allowed for use infix arithmetic. Initially, the
+ target is simulated using the execution time needed for 2000 randomly generated
+ ciphertexts. A number of tests were performed as both under- and oversampling
+ would have hindered performance, and 2000 seemed to work very well.
+    The target replica was used to calculate the number of clock cycles needed 
+ to perform a single Montgomery multiplication. Functions attackR and calibrate
+ were used to obtain data: c = 0 was decrypted using different private keys, and
+ also used to get the execution time from the actual target. This allowed for 
+ calculating the number of bits in the private key plus the hamming weight of the
+ private key. Therefore, the program only checks whether the full key is 
+ recovered when the length matches. If the full length is reached, but the key is
+ not recovered, the program will resort to backtracking.
+    The bits are guessed based on a confidence measure. I used absolute difference
+ of the means for the two cases (bit is 0 and bit is 1). The threshold was chosen
+ after a number of statistical tests. If the confidence is lower than this 
+ threshold the program backtracks and tries to correct any errors. If more than 2
+ backtracks are performed, the program addes 250 sample ciphertexts to the initial
+ set, and starts recovering the key from the beginning.
+    All of the above is also reflected by comments in the code.
+    Given more time, the attack could be improved by using a different confidence
+ measure - e.g. the varience between the execution times. Out of personal interest,
+ I would also like to try implementing the attack using a genetic algorithm 
+ [http://ccis2k.org/iajit/PDF/vol.1,no.1/01-Hamza.pdf ].
+ 
+	The Fault attack follows Tunstall's paper, cited above. Both steps - i.e.
+ systems of equations - outlined in the paper, are implemented. The 
+ implementation requires a single fault.
+    The big 16-level nested for loop was initially planned as an intermediate
+ step. However, the alternative of having four 4-nested for loops, which would
+ add all key hypotheses to a new vector could have led to memory starvation.
+ Additionally, the loop was easily parallelisable, which reduced the 
+ execution time significantly.
+    The implementation made use of Galois multiplication, SubBytes and 
+ SubBytesInverse lookup tables as it is quicker than computing those values 
+ each time. It is also immune to errors.
+ 
+    The Power attack follows the slides shown in lectures and the source cited
+ above. Only the first 10% of a power trace is saved as the attack targets the
+ power consumption in the first AES round; the rest of the trace is ignored.
+    Initially, 15 random ciphertexts are generated and passed to the target, 
+ with their respective power traces saved as explained above. The number was 
+ chosen experimentally - I tested what the minimum number of traces was needed 
+ to recover my personal key, and noticed 13 traces were enough in the majority
+ of trials. As targets might differ and behaviour of the attack is 
+ non-deterministic due to the randomly generated ciphertexts, I wanted to avoid
+ overfitting to my personal target, so I chose to start with 15 traces.
+    In case the key was not recovered in the end, I implemented a resampling 
+ step. It adds 5 more random ciphertexts to the initial set, and collects their
+ power traces, then attempts to recover the key again.
+    The statistical test used is the product-moment correlation coefficient due
+ to Kocher's method.
+]
+
+-------------------------------------------------------------------------------
